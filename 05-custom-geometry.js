@@ -1,5 +1,6 @@
 import * as THREE from "../build/three.module.js";
 import { OrbitControls } from "../examples/jsm/controls/OrbitControls.js";
+import { VertexNormalsHelper } from "../examples/jsm/helpers/VertexNormalsHelper.js";
 
 class App {
   constructor() {
@@ -25,6 +26,10 @@ class App {
     requestAnimationFrame(this.render.bind(this));
   }
 
+  _setupControls() {
+    new OrbitControls(this._camera, this._divContainer);
+  }
+
   _setupCamera() {
     const width = this._divContainer.clientWidth;
     const height = this._divContainer.clientHeight;
@@ -41,27 +46,72 @@ class App {
     this._scene.add(light);
   }
 
-  _setupControls() {
-    new OrbitControls(this._camera, this._divContainer);
-  }
-
   _setupModel() {
-    const geometry = new THREE.BoxGeometry(1, 1, 1, 2, 2, 2);
-    const fillMaterial = new THREE.MeshPhongMaterial({ color: 0x515151 });
-    const cube = new THREE.Mesh(geometry, fillMaterial);
+    // prettier-ignore
+    const rawPositions = [
+      -1, -1, 0, 
+       1, -1, 0, 
+      -1,  1, 0, 
+       1,  1, 0
+    ];
 
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffff00 });
-    const line = new THREE.LineSegments(
-      new THREE.WireframeGeometry(geometry),
-      lineMaterial
-    );
+    // prettier-ignore
+    const rawNormals = [
+      0, 0, 1, 
+      0, 0, 1, 
+      0, 0, 1, 
+      0, 0, 1
+    ];
 
-    const group = new THREE.Group();
-    group.add(cube);
-    group.add(line);
+    // prettier-ignore
+    const rawColors = [
+      1, 0, 0, 
+      0, 1, 0, 
+      0, 0, 1, 
+      1, 1, 0
+    ];
 
-    this._scene.add(group);
-    this._cube = group;
+    // prettier-ignore
+    const rawUVs = [
+      0, 0, 
+      1, 0, 
+      0, 1, 
+      1, 1,
+    ];
+
+    const positions = new Float32Array(rawPositions);
+    const normals = new Float32Array(rawNormals);
+    const colors = new Float32Array(rawColors);
+    const uvs = new Float32Array(rawUVs);
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+
+    // prettier-ignore
+    geometry.setIndex([
+      0, 1, 2, 
+      2, 1, 3
+    ]);
+
+    //geometry.computeVertexNormals();
+
+    const textureLoader = new THREE.TextureLoader();
+    const map = textureLoader.load("../examples/textures/uv_grid_opengl.jpg");
+
+    const material = new THREE.MeshPhongMaterial({
+      color: 0xffffff,
+      //vertexColors: true,
+      map: map,
+    });
+
+    const box = new THREE.Mesh(geometry, material);
+    this._scene.add(box);
+
+    const helper = new VertexNormalsHelper(box, 0.1, 0xffff00);
+    this._scene.add(helper);
   }
 
   resize() {
@@ -82,9 +132,6 @@ class App {
 
   update(time) {
     time *= 0.001; // second unit
-
-    //this._cube.rotation.x = time;
-    //this._cube.rotation.y = time;
   }
 }
 
