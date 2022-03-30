@@ -1,3 +1,3 @@
 # Three.js 스터디
 
-- wsl ssh test
+- wsl ssh test2
