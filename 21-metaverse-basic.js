@@ -23,7 +23,7 @@ class App {
     const scene = new THREE.Scene();
     this._scene = scene;
 
-    this._setupOctree();
+    //this._setupOctree();
     this._setupCamera();
     this._setupLight();
     this._setupModel();
@@ -35,8 +35,9 @@ class App {
     requestAnimationFrame(this.render.bind(this));
   }
 
-  _setupOctree() {
+  _setupOctree(model) {
     this._worldOctree = new Octree();
+    this._worldOctree.fromGraphNode(model);
   }
 
   _setupControls() {
@@ -96,16 +97,18 @@ class App {
   }
 
   _setupModel() {
-    const planeGeometry = new THREE.PlaneGeometry(1000, 1000);
-    const planeMaterial = new THREE.MeshPhongMaterial({ color: 0x878787 });
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    plane.rotation.x = -Math.PI / 2;
-    this._scene.add(plane);
-    plane.receiveShadow = true;
+    // const planeGeometry = new THREE.PlaneGeometry(1000, 1000);
+    // const planeMaterial = new THREE.MeshPhongMaterial({ color: 0x878787 });
+    // const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    // plane.rotation.x = -Math.PI / 2;
+    // this._scene.add(plane);
+    // plane.receiveShadow = true;
 
-    this._worldOctree.fromGraphNode(plane);
+    // this._worldOctree.fromGraphNode(plane);
 
-    new GLTFLoader().load("./data/character.glb", (gltf) => {
+    const loader = new GLTFLoader();
+
+    loader.load("./data/character.glb", (gltf) => {
       const model = gltf.scene;
       this._scene.add(model);
 
@@ -152,24 +155,39 @@ class App {
       this._boxHelper = boxHelper;
       this._model = model;
 
-      // 테스트 박스
-      const boxG = new THREE.BoxGeometry(100, diameter - 5, 100);
-      const boxM = new THREE.Mesh(boxG, planeMaterial);
-      boxM.receiveShadow = true;
-      boxM.castShadow = true;
-      boxM.position.set(150, 0, 0);
-      this._scene.add(boxM);
+      // 테스트 장애물 박스
+      //   const boxG = new THREE.BoxGeometry(100, diameter - 5, 100);
+      //   const boxM = new THREE.Mesh(boxG, planeMaterial);
+      //   boxM.receiveShadow = true;
+      //   boxM.castShadow = true;
+      //   boxM.position.set(150, 0, 0);
+      //   this._scene.add(boxM);
 
-      this._worldOctree.fromGraphNode(boxM);
+      //   this._worldOctree.fromGraphNode(boxM);
 
-      const boxG2 = new THREE.BoxGeometry(100, 500, 100);
-      const boxM2 = new THREE.Mesh(boxG2, planeMaterial);
-      boxM2.receiveShadow = true;
-      boxM2.castShadow = true;
-      boxM2.position.set(-150, 0, 0);
-      this._scene.add(boxM2);
+      //   const boxG2 = new THREE.BoxGeometry(100, 500, 100);
+      //   const boxM2 = new THREE.Mesh(boxG2, planeMaterial);
+      //   boxM2.receiveShadow = true;
+      //   boxM2.castShadow = true;
+      //   boxM2.position.set(-150, 0, 0);
+      //   this._scene.add(boxM2);
 
-      this._worldOctree.fromGraphNode(boxM2);
+      //   this._worldOctree.fromGraphNode(boxM2);
+    });
+
+    loader.load("./data/space.glb", (gltf) => {
+      const model = gltf.scene;
+
+      this._scene.add(model);
+
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+
+      this._setupOctree(model);
     });
   }
 
